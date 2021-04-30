@@ -1,0 +1,166 @@
+import tkinter as tk #allows the package to open buttons
+import json#interactions with JSON package
+from tkinter import ttk
+from tkinter import scrolledtext# the big white section where results will go
+import folium # imports the GUI window on the anocanda prompt
+import webbrowser#allow the user to load a internet browser
+from folium.plugins import MarkerCluster #allows the use of clusters
+#import pandas as pd
+
+# Create the window
+win = tk.Tk()
+# Add a title
+win.title("Forensics Data Analysis Of Tweets Involving Crime") # can call what the window is
+# setting the size of the window
+win.minsize(width=1250, height=750)
+win.maxsize(width=1250, height=750)
+# Disable resizing the GUI
+win.resizable(0,0) #not allowing the GUI to resize so making it fixed 
+#-----------------------------------------General search button------------------------------------------------------
+---
+def SearchingCrimes():
+ map_osm = folium.Map(location=[53.472328361821766,-2.23959064483645])#sets where the
+map will firstly be shown in this case Manchester
+ searchkeyword = name.get() # allows the text variable
+ marker_cluster=MarkerCluster().add_to(map_osm)#allows the program to open clusters to the map
+#--------------------------------------------The general search JSON files-----------------------------------------
+-----
+ with open('Manchester_Part-1.json', encoding="utf8") as data_file:#encoding utf8 allows user to
+use all letters, emojis and symbols
+ SimpleSearch(data_file,searchkeyword,marker_cluster,map_osm)
+ #--------------------------------------------------------------------------------------------------------------
+ with open('Manchester_Part-2.json', encoding="utf8") as data_file:
+ SimpleSearch(data_file) # pulls the data from the data file and calls it in here
+ #-----------------------------------------------------------------------------------------------------------------
+ with open('Manchester_Part-3.json', encoding="utf8") as data_file:
+ SimpleSearch(data_file)
+ #-----------------------------------------------------------------------------------------------------------------
+def SimpleSearch(data_file,searchkeyword,marker_cluster,map_osm):# Allows the process to be
+called once so no errors in the changing of code
+ countt = 0
+ for row in data_file:
+ data = json.loads(row)
+ tempText = data['text']
+ latt = data['geoLocation']['latitude']
+ longg = data['geoLocation']['longitude'] #trying to find the tweets location
+
+ if searchkeyword in tempText: #if that keyword is in the temp text then increase the account and
+pick some of the data below
+ countt = countt + 1
+ StringToScroll = "\n\n["+str(countt)+"] Date: " + data['createdAt']['$date'] + " Tweet Text: " +
+data['text']
+ folium.Marker([latt,longg], popup=tempText).add_to(marker_cluster)
+ TextBox.insert(tk.INSERT,StringToScroll)# adding them to a string and then plotting them to
+the map
+ map_osm.save('plotted.html')#saves and adds them to the map
+#----------------------------------------Template based searching(serious crime)--------------------------------
+-------------------------------------------------------------------------
+def SeriousCrimes():
+ SeriousCrime = ["Gun", "Knife", "Stabbing", "knife attack", "Serious crimes","sexual
+assault","murder"] #the areas that link together on the plotted map
+ map_osm = folium.Map(location=[53.472328361821766,-2.23959064483645])#sets where the
+map will start from
+ marker_cluster=MarkerCluster().add_to(map_osm)#allows the use of markers on the map
+#--------------------------------------------------------------------------------------------------
+ with open('Manchester_Part-1.json', encoding="utf8") as data_file:#encoding utf8 allows user to
+use all letters, emojis and symbols 
+ templateSearcherSeriousCrimes(data_file,SeriousCrime,map_osm,marker_cluster) # Allows the
+process to be called once so no errors in the changing of code
+##-------------------------------------------------------------------------------------------------
+ with open('Manchester_Part-2.json', encoding="utf8") as data_file:
+ templateSearcherSeriousCrimes(data_file,SeriousCrime,map_osm,marker_cluster)
+# ---------------------------------------------------------
+ with open('Manchester_Part-3.json', encoding="utf8") as data_file:
+ templateSearcherSeriousCrimes(data_file,SeriousCrime,map_osm,marker_cluster)
+#-----------------------------------------------------------------------------------------------------------------
+def templateSearcherSeriousCrimes(data_file,SeriousCrime,map_osm,marker_cluster):
+ countt = 0
+ for row in data_file:
+ data = json.loads(row)
+ tempText = data['text']
+ latt = data['geoLocation']['latitude']
+ longg = data['geoLocation']['longitude'] #trying to find the tweets location
+
+ for word in SeriousCrime:#if that keyword is in the temp text then increase the account and pick
+some of the data below
+ if word in tempText:
+ countt = countt + 1
+ StringToScroll = "\n\n["+str(countt)+"] Date: " + data['createdAt']['$date'] + "Tweet Text:"
++ data['text']
+ folium.Marker([latt,longg], popup=tempText).add_to(marker_cluster)
+ TextBox.insert(tk.INSERT,StringToScroll)# adding them to a string and then plotting them
+to the map
+ map_osm.save('plotted.html')#saves and adds them to the map
+ #-------------------------------------Template based searching (none serious)----------------------------------
+-------------------
+def NoneSeriousCrimes():
+ NoneSeriousCrime = ["drugs","theft","criminal damage", "vandalism", "hate crime"]
+ map_osm = folium.Map(location=[53.472328361821766,-2.23959064483645])
+ marker_cluster=MarkerCluster().add_to(map_osm)
+#--------------------------------------------------------------------------------------------------
+ with open('Manchester_Part-1.json', encoding="utf8") as data_file:#encoding utf8 allows user to
+use all letters, emojis and symbols
+ templateSearcherSeriousCrimes(data_file,NoneSeriousCrime,map_osm,marker_cluster)# Allows
+the process to be called once so no errors in the changing of code
+##-------------------------------------------------------------------------------------------------
+ with open('Manchester_Part-2.json', encoding="utf8") as data_file:
+ templateSearcherSeriousCrimes(data_file,NoneSeriousCrime,map_osm,marker_cluster)
+# -------------------------------------------------------------------------------------------------
+ with open('Manchester_Part-3.json', encoding="utf8") as data_file:
+ templateSearcherSeriousCrimes(data_file,NoneSeriousCrime,map_osm,marker_cluster)
+##-------------------------------------------------------------------------------------------------
+def templateSearcherNoneSeriousCrimes(data_file,NoneSeriousCrime,map_osm,marker_cluster):
+ countt = 0
+ for row in data_file: 
+ data = json.loads(row)
+ tempText = data['text']
+ latt = data['geoLocation']['latitude']
+ longg = data['geoLocation']['longitude'] #trying to find the tweets location
+
+ for word in NoneSeriousCrime:
+ if word in tempText:#if that keyword is in the temp text then increase the account and pick
+some of the data below
+ countt = countt + 1
+ StringToScroll = "\n\n["+str(countt)+"] Date: " + data['createdAt']['$date'] + "Tweet Text:"
++ data['text']
+ folium.Marker([latt,longg], popup=tempText).add_to(marker_cluster)
+ TextBox.insert(tk.INSERT,StringToScroll)# adding them to a string and then plotting them
+to the map
+ map_osm.save('plotted.html')#saves and adds them to the map
+ #--------------------------------------------------------------------------------------------------
+def ShowPlottedSearchResults():
+ webbrowser.open_new_tab('plotted.html')
+
+# Changing our Label
+ttk.Label(win, text="Enter a search word:").grid(column=0, row=0)# changing the input for the GUI
+number = tk.StringVar()
+ttk.Label(win, text="Results:").grid(column=0,row = 2)
+# Adding a Textbox Entry widget
+name = tk.StringVar()#creating a string variable
+nameEntered = ttk.Entry(win, width=40, textvariable=name)#setting it to the name on the GUI
+nameEntered.grid(column=0, row=1) #where the box to input text
+# Adding a Button
+ #--------------------------------------------------------------------------------------------------
+action = ttk.Button(win, text="Simple Tweets Search", command=SearchingCrimes)#when something
+is clicked to search this action is called
+action.grid(column=1, row=0) #where you are putting it
+#button for the template searching
+action = ttk.Button(win, text="Search Serious Crimes Tweets", command=SeriousCrimes)
+action.grid(column=1, row=1)
+#button for the less serious crimes
+action = ttk.Button(win, text="Less Serious Crime Tweets", command=SeriousCrimes)
+action.grid(column=1, row=2)
+ #--------------------------------------------------------------------------------------------------
+# Using a scrolled Text control
+scrolW = 200
+scrolH = 30
+TextBox = scrolledtext.ScrolledText(win, width=scrolW, height=scrolH, wrap=tk.WORD)
+TextBox.grid(column=0, columnspan=3)# where you want it to start and how many columns it will
+take
+# Adding a Button
+loadingJsonButton = ttk.Button(win, text=" Show Plotted Search Results ", 
+command=ShowPlottedSearchResults)
+loadingJsonButton.grid(column=0, columnspan=1)
+# Place cursor into name Entry
+nameEntered.focus()
+win.mainloop()#Starts the program 
