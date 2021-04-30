@@ -1,0 +1,48 @@
+import os
+import sys
+import wand
+from wand.image import Image
+import subprocess
+import random
+from random import randint
+from beautifultable import BeautifulTable 
+items = os.listdir("Images")
+
+#name = Value
+shaUnique = 0
+mdUnique =0
+
+table = BeautifulTable()
+
+table.column_headers = ["MD5hash" , "SHAhash"]
+sh = []
+newlist = []
+for names in items:
+	if names.endswith(".jpg"):
+		newlist.append(names)
+		newlist.sort()
+md = []
+sh = []
+
+for img in newlist:
+	
+	sha = subprocess.check_output(["shasum" , "Images/" + img ])
+	sh.append('---Entry No:')	
+	shaUnique = shaUnique +1
+	sh.append(shaUnique)			
+	sh.append('Hash Value:')	
+	sh.append(sha)
+	
+	
+	
+	md5 = subprocess.check_output(["md5sum" , "Images/" + img])
+	md.append('---Entry No:')	
+	mdUnique = mdUnique +1 
+	md.append(mdUnique)	
+	md.append('Hash Value:')	
+	md.append(md5)
+	
+table.append_row([md, sh])
+
+
+print(table)
