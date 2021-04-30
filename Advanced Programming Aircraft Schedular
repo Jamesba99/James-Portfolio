@@ -1,0 +1,678 @@
+//----------------------------------------------------------------------------------------------------------------------
+package solution;
+import java.nio.file.Paths;
+import baseclasses.DataLoadingException;
+import baseclasses.IAircraftDAO;
+import baseclasses.IPassengerNumbersDAO;
+//import baseclasses.ICrewDAO;
+//import baseclasses.IPassengerNumbersDAO;
+//import baseclasses.IRouteDAO;
+//import baseclasses.ICrewDAO;
+
+//------------------------------------------------------------------------------------------------------------------------
+public class Main {
+//------------------------------------------------------------------------------------------------------------------------
+	public static void main(String[] args) {	
+		IAircraftDAO aircraft = new AircraftDAO();
+		//ICrewDAO  crew = new CrewDAO();
+		//IRouteDAO routes = new RouteDAO();
+		IPassengerNumbersDAO numbers = new  PassengerNumbersDAO();
+//----------------------------------------------------------------------------------------------------------------------	
+		try {
+			
+			aircraft.loadAircraftData(Paths.get("./data/aircraft.csv"));// loads the files that are needed to test code that may have faults
+			//crew.loadCrewData(Paths.get("./data/crew.json"));
+			//routes.loadRouteData(Paths.get("./data/mini_routes.xml"));
+			numbers.loadPassengerNumbersData(Paths.get("./data/mini_passengers.db"));
+			System.out.println(numbers.getNumberOfEntries());
+		}
+		
+		catch (DataLoadingException dle) {
+			System.err.println("Error loading aircraft data");
+			System.err.println("Error loading crew data");
+			System.err.println("Error loading route data");
+			dle.printStackTrace();
+			
+		}
+	}
+
+}
+//------------------------------------------------------------------------------------------------------------------------
+  
+
+//------------------------------------------------Aircraft DAO-------------------------------------------------------------
+//-----------------------------------All the packages and imports used to run the program----------------------------------
+package solution;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.*;
+//import com.sun.org.apache.xpath.internal.operations.Equals;
+import baseclasses.Aircraft;
+//import baseclasses.Aircraft.Manufacturer;
+import baseclasses.DataLoadingException;
+import baseclasses.IAircraftDAO;
+
+//------------------------------------------------------------------------------------------------------------------------
+
+public class AircraftDAO implements IAircraftDAO {//The AircraftDAO class is responsible for loading aircraft data from CSV files
+	private ArrayList<Aircraft> planes = new ArrayList<Aircraft>();// the new array list to allow the data to be pulled from the-
+	//--CSV files under the name 'AirCraft
+//------------------------------------------------------------------------------------------------------------------------	
+	@Override
+	public void loadAircraftData(Path p) throws DataLoadingException {	// tells the marker to go threw path p when extracting the data-
+		//- from it
+		try {
+			//open the file
+			BufferedReader reader = Files.newBufferedReader(p);		
+			//read the file line by line
+			String line = "";
+			//skip the first line of the file - headers
+			reader.readLine();
+			
+			while( (line = reader.readLine()) != null) {
+				//each line has fields separated by commas, split into an array of fields
+				String[] fields = line.split(",");
+				Aircraft plane = new Aircraft();
+				
+				//put some of the fields into variables: check which fields are where atop the CSV file itself
+				String tailcode = fields[0];
+				plane.setTailCode(tailcode);
+				String type = fields[1];
+			    plane.setTypeCode(type);// setting the String from typeCode to the name of type
+			    	try {
+			    		Aircraft.Manufacturer man = Aircraft.Manufacturer.valueOf(fields[2].toUpperCase());
+			    		plane.setManufacturer(man);
+			    	}
+			    	catch(IllegalArgumentException ile) {
+					throw new DataLoadingException(ile);//There was a problem reading the file so throws an exception to bypass it 
+				
+				}
+			    
+			    plane.setModel(fields[3]);
+			    
+				
+				int seats = Integer.parseInt(fields[4]);
+				plane.setSeats(seats);
+				
+				plane.setCabinCrewRequired(Integer.parseInt(fields[5]));
+				plane.setStartingPosition(fields[6]);
+				
+			
+				//print a line explaining what we've found
+				System.out.println("Aircraft: " + tailcode + " is a " + type + " with " + seats + " seats.");
+				planes.add(plane);
+			}
+		}
+		catch(IOException|NullPointerException|IllegalArgumentException ioe) { 
+			//There was a problem reading the file
+			throw new DataLoadingException(ioe);
+		
+		}
+
+	}
+//------------------------------------------------------------------------------------------------------------------------	
+	@Override
+	public List<Aircraft> findAircraftBySeats(int seats) {
+		ArrayList<Aircraft> output = new ArrayList<Aircraft>();// new array list which pulls the information from the Aircraft array
+		for(Aircraft a : planes) {//uses a for loop to call and then assign the array planes to the variable 'a'
+			if(a.getSeats() >= seats) {// using the information from the from the CSV  get the number of seats greater or equal to the number of seats on the CSV
+				//- and then add it to results then return the output
+				
+				output.add(a);
+			}
+		}		
+		
+		return output;
+	}
+//------------------------------------------------------------------------------------------------------------------------	
+	@Override
+	public List<Aircraft> findAircraftByStartingPosition(String startingPosition) { // returns a list of loaded aircraft at a certain airport
+		ArrayList<Aircraft> output = new ArrayList<Aircraft>(); // new array list which pulls the information from the Aircraft array
+		for(Aircraft a : planes) { //uses a for loop to call and then assign the array planes to the variable 'a' 
+			if(a.getStartingPosition().equals(startingPosition)){// using the information from a get the starting position from the CSV-
+				output.add(a);//- and then add it to results then return the output
+			}
+		}
+		return output;
+	}
+//------------------------------------------------------------------------------------------------------------------------
+	@Override
+	public Aircraft findAircraftByTailCode(String tailCode) {//returns an aircraft with specific tail code
+		ArrayList<Aircraft> output = new ArrayList<Aircraft>(); // new array list which pulls the information from  the Aircraft array
+		for(Aircraft a : planes) {//uses a for loop to call and then assign the array planes to the variable 'a' 
+			if(a.getTailCode().equals(tailCode)){// using the information from a get the tailCode from the CSV-			
+			return a;//- and then add it to results then return the output
+			}					
+		}
+		return null; // return null after
+	}
+//------------------------------------------------------------------------------------------------------------------------
+	public List<Aircraft> findAircraftByType(String typeCode) {// returns aircraft with certain type code
+		ArrayList<Aircraft> output = new ArrayList<Aircraft>();// new array list which pulls the information from  the Aircraft array
+		for(Aircraft a : planes) {//uses a for loop to call and then assign the array planes to the variable 'a
+			if(a.getTypeCode().equals(typeCode)){
+				
+			output.add(a);// using the information from a get the typeCode from the CSV-			
+			//- and then add it to results then return the output
+			
+			}
+		}
+		return output;
+	}
+//------------------------------------------------------------------------------------------------------------------------	
+	@Override
+	public List<Aircraft> getAllAircraft() { // returns a list of all loaded aircraft
+		ArrayList<Aircraft> output = new ArrayList<Aircraft>();// new array list which pulls the information from  the Aircraft array
+		for(Aircraft a : planes) {//uses a for loop to call and then assign the array planes to the variable 'a'
+			output.add(a);// using the information from a get the typeCode from the CSV-			
+			//- and then add it to results then return the to planes because you are extracting all the data about planes
+		}
+		return planes;
+	}
+	
+
+//------------------------------------------------------------------------------------------------------------------------	
+	@Override
+	public int getNumberOfAircraft() { //Returns the number of aircraft currently loaded 
+		
+		return planes.size(); // returns the number of planes in that list from the csv file
+	}
+
+//------------------------------------------------------------------------------------------------------------------------	
+	@Override
+	public void reset() {
+		// TODO Auto-generated method stub
+		planes.clear();
+	}
+	// resets the method and clears all the planes once it has been run
+
+}
+//------------------------------------------------------------------------------------------------------------------------
+
+//------------------------------------------CrewDAO-------------------------------------------------------------------
+package solution;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.json.JSONException;
+import baseclasses.CabinCrew;
+import baseclasses.Crew;
+import baseclasses.DataLoadingException;
+import baseclasses.ICrewDAO;
+import baseclasses.Pilot;
+import baseclasses.Pilot.Rank;
+
+//------------------------------------------------------------------------------------------------------------------------
+public class CrewDAO implements ICrewDAO {// the new array list to allow the data to be pulled from the-
+	//--JSON files under the name 'AirCraft
+	private ArrayList<Pilot> airmen = new ArrayList<Pilot>();
+	private ArrayList<CabinCrew> airstaff = new ArrayList<CabinCrew>(); // two arrays one for the pilot and crew is created
+//------------------------------------------------------------------------------------------------------------------------	
+	public void loadCrewData(Path p) throws DataLoadingException {	
+		try {			
+			//open the file
+			BufferedReader reader = Files.newBufferedReader(p);
+			// be able to read the file 
+			String json = ""; 
+			String line = "";				
+			while((line = reader.readLine()) != null) {
+				//put some of the fields into variables: check which fields are where atop the CSV file itself
+					json = json + line;
+			}
+			JSONObject data = new JSONObject(json);
+			JSONArray pilots = data.getJSONArray("pilots");
+			JSONArray cabincrew = data.getJSONArray("cabincrew");
+			
+			for(int i=0; i<pilots.length(); i++) {
+				Pilot captain = new Pilot();
+				JSONObject temp = pilots.getJSONObject(i);
+				
+				String firstname = temp.getString("forename");// calls the forename from the file and then turns it into a string 
+				captain.setForename(firstname);// Assigning all forenames to the variable firstname
+				String surname = temp.getString("surname"); // it is also done for surname,homebase and typeRatings
+				captain.setSurname(surname);
+				String base = temp.getString("homebase");
+				captain.setHomeBase(base);
+				JSONArray types = temp.getJSONArray("typeRatings");
+				String rank =temp.getString("rank");// calls for all ranks to be pulled from the data
+				
+				if(rank.equals("CAPTAIN")) { // If the rank is Captain it will add it to the record
+					captain.setRank(Rank.CAPTAIN);
+				}
+				else // however if it isnt it will be assigned with the first officer tag
+				{
+					captain.setRank(Rank.FIRST_OFFICER);
+				}
+				for (int j=0; j<types.length(); j++) {
+					captain.setQualifiedFor(types.getString(j));// then receives all data and then sets which roles the pilot is qualifed for
+				}
+				
+				if(!airmen.contains(captain)) { // then it is added to the records
+				airmen.add(captain);
+				}
+				
+			} 
+			
+			for(int i=0; i<cabincrew.length(); i++) {// the same is done fo crew however there is only one type of crew
+				CabinCrew CabinStaff = new CabinCrew(); // cabin crew is given the variable cabinStaff
+				JSONObject temp = cabincrew.getJSONObject(i);
+				String firstname = temp.getString("forename"); // like the pilot the code is assigning all firstnames,surnames
+				CabinStaff.setForename(firstname);// -, homebases, and typeRatings to an individual variable
+				String surname = temp.getString("surname");
+				CabinStaff.setSurname(surname);
+				String base = temp.getString("homebase");
+				CabinStaff.setHomeBase(base);
+				JSONArray types = temp.getJSONArray("typeRatings");
+					for (int j=0; j<types.length(); j++) {
+						CabinStaff.setQualifiedFor(types.getString(j));
+					}
+							if(!airstaff.contains(CabinStaff)) {// if the record doesn't exist then the if statement will ask it to add it ot the records
+								airstaff.add(CabinStaff);
+								
+							}
+			}
+		}
+		
+		catch (IOException | JSONException ioe) {
+			//There was a problem reading the file so an exception is thrown to bypass it
+			throw new DataLoadingException(ioe);
+		}
+
+	}
+//------------------------------------------------------------------------------------------------------------------------	
+	@Override
+	public List<CabinCrew> findCabinCrewByHomeBase(String airportCode) {
+		ArrayList<CabinCrew>output = new ArrayList<CabinCrew>();// new array for cabin crew called output
+			for(CabinCrew c : airstaff) {//uses a for loop to call and then assign the array CabinCrews to the variable 'c'
+				if(c.getHomeBase().equals(airportCode))// using the information from the from the JSON get the airportcodes on the JSON
+				{//- and then add it to output then return the output
+					output.add(c);
+				}
+			}
+		
+		return output;
+	}
+//------------------------------------------------------------------------------------------------------------------------
+	@Override
+	public List<CabinCrew> findCabinCrewByHomeBaseAndTypeRating(String typeCode, String airportCode) {
+		ArrayList<CabinCrew> homeAndTypeRatings = new ArrayList<CabinCrew>();// new array for cabin crew called homeAndTypeRatings
+			for(CabinCrew c : airstaff) {//uses a for loop to call and then assign the array planes to the variable 'c'
+				if(c.getHomeBase().equals(airportCode) && c.isQualifiedFor(typeCode)) {// using the information from the from the JSON get the airportcodes and type codes on the JSON
+					homeAndTypeRatings.add(c);	//- and then add it to output then return the output
+				}
+			}
+		return homeAndTypeRatings;
+	}
+//------------------------------------------------------------------------------------------------------------------------	
+	@Override
+	public List<CabinCrew> findCabinCrewByTypeRating(String typeCode) { // returns all cabin crew and who are qualified to fly that plane
+		ArrayList<CabinCrew>output = new ArrayList<CabinCrew>();	// new array for cabin crew called output
+			for(CabinCrew c : airstaff) {//uses a for loop to call and then assign the array CabinCrews to the variable 'c'
+				if(c.isQualifiedFor(typeCode)) {// using the information from the from the JSON get the airportcodes on the JSON
+					output.add(c);	//- and then add it to output then return the output		
+				}
+			}
+			return output;
+	}
+
+//------------------------------------------------------------------------------------------------------------------------	
+	@Override
+	public List<Pilot> findPilotsByHomeBase(String airportCode) { // returns all the pilots based in that airport
+		ArrayList<Pilot> output = new ArrayList<Pilot>();// new array for cabin crew called output
+			for(Pilot p : airmen) {//uses a for loop to call and then assign the array CabinCrews to the variable 'p'
+				if(p.getHomeBase().equals(airportCode)) {// using the information from the from the JSON get the homebase and airportcodes on the JSON
+					output.add(p);	//- and then add it to output then return the output	
+				}
+			}
+			return output;
+	}
+	
+//------------------------------------------------------------------------------------------------------------------------
+	@Override
+	public List<Pilot> findPilotsByHomeBaseAndTypeRating(String typeCode, String airportCode) { // list of all the pilots and what they are qualified for
+			ArrayList<Pilot> homeAndTypeRatings = new ArrayList<Pilot>();	// new array for cabin crew called homeandbaseRatings
+			for(Pilot p : airmen) {//uses a for loop to call and then assign the array CabinCrews to the variable 'p'
+				if(p.getHomeBase().equals(airportCode) && p.isQualifiedFor(typeCode)) {// using the information from the from the JSON get the homebase and airportcodes on the JSON
+					homeAndTypeRatings.add(p);//- and then add it to homeandbaseRatings then return the homeandbaseRatings
+				}
+			}	
+				return homeAndTypeRatings;
+				
+	}
+//------------------------------------------------------------------------------------------------------------------------	
+	@Override
+	public List<Pilot> findPilotsByTypeRating(String typeCode) { // find who is quaified for each plane
+		ArrayList<Pilot> output = new ArrayList<Pilot>();// new array for cabin crew called homeandbaseRatings
+			for(Pilot p : airmen) { //uses a for loop to call and then assign the array CabinCrews to the variable 'p'
+				if(p.isQualifiedFor(typeCode)) {// using the information from the from the JSON get the homebase and airportcodes on the JSON
+					output.add(p);	//- and then add it to output then return the output		
+					}
+				}
+		return output;
+	}
+//------------------------------------------------------------------------------------------------------------------------	
+	@Override
+	public List<CabinCrew> getAllCabinCrew() { // all cabin crew currently loaded
+	
+			return airstaff;
+			}
+
+//------------------------------------------------------------------------------------------------------------------------	
+	@Override
+	public List<Crew> getAllCrew() { // all crew loaded regardless of type
+		ArrayList<Crew> mergedList = new ArrayList<Crew>();// creates a new array called mergedList
+		mergedList.addAll(airmen);// adds all airmen and airstaff into one array 
+		mergedList.addAll(airstaff);
+		return mergedList ;// returns the mergedList
+	}
+
+//------------------------------------------------------------------------------------------------------------------------
+	@Override
+	public List<Pilot> getAllPilots() { // returns all pilots currently loaded 
+		return airmen;
+	}
+	
+//------------------------------------------------------------------------------------------------------------------------
+	@Override
+	public int getNumberOfCabinCrew() { // get the number of cabin crew loaded
+		// TODO Auto-generated method stub
+		return airstaff.size();
+	}
+
+	
+//------------------------------------------------------------------------------------------------------------------------	
+	@Override
+	public int getNumberOfPilots() {//Returns the number of pilots currently loade
+		// TODO Auto-generated method stub
+		return airmen.size();// returns the number of planes in that list from the XML file-
+	}
+//------------------------------------------------------------------------------------------------------------------------	
+	@Override
+	public void reset() {
+		airmen.clear();
+		airstaff.clear();
+		// TODO Auto-generated method stub
+
+	}
+
+}
+//------------------------------------------------------------------------------------------------------------------------
+//------------------------------------PassengerNumbersDAO-----------------------------------------------------------
+package solution;
+import java.nio.file.Path;
+import java.time.LocalDate;
+import baseclasses.DataLoadingException;
+import baseclasses.IPassengerNumbersDAO;
+import java.sql.*;
+import java.util.HashMap;
+import java.util.Map;
+
+// all the imports to run the code
+//------------------------------------------------------------------------------------------------------------------------
+public class PassengerNumbersDAO implements IPassengerNumbersDAO { //The PassengerNumbersDAO is responsible for loading an SQLite database
+	HashMap <String, Integer > hmap= new HashMap<String, Integer>(); // the Array to create the heatmap
+	
+	Connection c = null; // starts the connection off as null
+	
+//Loading all passenger information
+	/**
+	 * Returns the number of passenger number entries in the cache
+	 * @return the number of passenger number entries in the cache
+	 */
+//------------------------------------------------------------------------------------------------------------------------	
+	@Override
+	public int getNumberOfEntries() {//Returns the number of passenger number entries in the cache
+		return hmap.size();// returns the number of planes in that list from the DB file
+	}
+	//------------------------------------------------------------------------------------------------------------------------	
+	@Override
+	public int getPassengerNumbersFor(int flightNumber, LocalDate date) { //Returns the predicted number of passengers for a given flight on a given date, or -1 if no data available
+		String FN = String.valueOf(flightNumber);//  setting the string the value of the flightnumber
+		String D = String.valueOf(date); //setting the string the value of the date
+		String FND = (FN + " " + D); // adding the string in the order of the database
+		
+		for (Map.Entry HeatMap : hmap.entrySet()) { // gives the hash map a varaible 
+			String keys = (String)HeatMap.getKey();// returns the keys to the corrasponding 
+			int value = ((int)HeatMap.getValue()); // Returns the value corresponding to this entry
+			if (FND.equals(keys)) {
+				return value; // and then add it to value then return the value
+			}
+		}
+		
+		return -1;
+	}
+//------------------------------------------------------------------------------------------------------------------------
+	@Override
+	public void loadPassengerNumbersData(Path p) throws DataLoadingException {
+		//Loads the passenger numbers data from the specified SQLite database into a cache for future calls to getPassengerNumbersFor()
+		try {
+			
+			String path = ("jdbc:sqlite:" + p);// loads the hash map and the drivers
+			Connection c = DriverManager.getConnection(path); // establishes the connections with the database
+			
+			Statement s = c.createStatement(); // creates  queries to pull out hte database
+			ResultSet r = s.executeQuery("SELECT * FROM PassengerNumbers");// excute the the query
+			
+			while (r.next()) { // while loop to convert values
+				String dandfn = r.getString("Date") + " " + r.getString("FlightNumber");// converting the data to strings and then combine them into the same key
+				int p1 = r.getInt("Passengers");//gets int
+				hmap.put(dandfn, p1);// addds it to the hash map
+
+			}
+		}
+			catch(SQLException se) {
+				throw new DataLoadingException(se);
+				
+			}
+
+	// prints out the throwable string
+}
+	
+
+//------------------------------------------------------------------------------------------------------------------------	
+	@Override
+	public void reset() { // end the program and restart
+		hmap.clear();
+
+	}
+
+}
+//------------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------RouteDAO--------------------------------------------------------------
+package solution;
+import java.nio.file.Path;
+import java.time.Duration;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.List;
+import baseclasses.DataLoadingException;
+import baseclasses.IRouteDAO;
+import baseclasses.Route;
+import org.w3c.dom.*;
+import javax.xml.parsers.*;
+import java.io.*;
+import org.xml.sax.*;
+//------------------------------------------------------------------------------------------------------------------------
+/**
+ * The RouteDAO parses XML files of route information, each route specifying
+ * where the airline flies from, to, and on which day of the week
+ */
+//------------------------------------------------------------------------------------------------------------------------
+public class RouteDAO implements IRouteDAO {// the new array list to allow the data to be pulled from the-
+	//--XML files under the name 'AirCraft
+	
+	private ArrayList<Route> routes = new ArrayList<Route>(); // the new arraylist fo the routes
+
+	//------------------------------------------------------------------------------------------------------------------------
+	@Override
+	public List<Route> findRoutesByDayOfWeek(String dayOfWeek) {//Finds all flights that depart on the specified day of the week
+		ArrayList<Route> output = new ArrayList<Route>();// / new array for cabin crew called output
+		for(Route o : routes) { //uses a for loop to call and then assign the array routes to the variable 'o'
+			if(o.getDayOfWeek().equals(dayOfWeek)) {// using the information from the from the XML get the day of week
+				output.add(o);	//- and then add it to output then return the output		
+			}
+		}
+		return output;
+	}
+	//------------------------------------------------------------------------------------------------------------------------
+	@Override
+	public List<Route> findRoutesByDepartureAirportAndDay(String airportCode, String dayOfWeek) {//Finds all of the flights that depart from a specific airport on a specific day of the week
+		ArrayList<Route> output = new ArrayList<Route>();//new array for cabin crew called output
+			for(Route o : routes) { //uses a for loop to call and then assign the array routes to the variable 'o'
+				if(o.getDepartureAirportCode().equals(airportCode) && o.getDayOfWeek().equals(dayOfWeek)) {
+					output.add(o);// using the information from the from the XML get the airportcode and day of week
+					//- and then add it to output then return the output
+				}
+			}
+			return output;		
+	}
+	//------------------------------------------------------------------------------------------------------------------------
+	@Override
+	public List<Route> findRoutesDepartingAirport(String airportCode) {//Finds all of the flights that depart from a specific airport
+		ArrayList<Route> output = new ArrayList<Route>();//new array for cabin crew called output
+		for(Route o: routes) { //uses a for loop to call and then assign the array routes to the variable 'o'
+			if(o.getDepartureAirportCode().equals(airportCode)) {
+				output.add(o);// using the information from the from the XML get the airportcode
+			}
+		}
+		return output;
+	}//- and then add it to output then return the output
+	//------------------------------------------------------------------------------------------------------------------------
+	@Override
+	public List<Route> findRoutesbyDate(LocalDate date) {//Finds all of the flights that depart on the specified date
+		ArrayList<Route> output = new ArrayList<Route>();//new array for cabin crew called output
+		String D = date.getDayOfWeek().name(); // get the day of week and converts it to a string 
+		String D1 = "";
+		if (D.equals("MONDAY")) { //so when a date is pulled it then is converted into a shorter three word abreviation
+			D1="Mon";
+		}
+		if (D.equals("TUESDAY")) {
+			D1="Tue";
+		}
+		if (D.equals("WEDNESDAY")) {
+			D1="Wed";
+		}
+		if (D.equals("THURSDAY")) {
+			D1="Thu";
+		}
+		if (D.equals("FRIDAY")) {
+			D1="Fri";
+		}
+		if (D.equals("SATURDAY")) {
+			D1="Sat";
+		}
+		if (D.equals("SUNDAY")) {
+			D1="Sun";
+		}
+		for (Route o : routes) {//uses a for loop to call and then assign the array routes to the variable 'o'
+			if(o.getDayOfWeek().equals(D1)) {
+				output.add(o);// adds the output to output
+			}
+		}
+		
+		return output;//- and then add it to output then return the output
+	}
+	//------------------------------------------------------------------------------------------------------------------------
+	@Override
+	public List<Route> getAllRoutes() { //Returns The full list of all currently loaded routes
+		// TODO Auto-generated method stub
+		return routes;
+	}
+	//------------------------------------------------------------------------------------------------------------------------
+	@Override
+	public int getNumberOfRoutes() { //Returns The number of routes currently loaded
+
+		return routes.size();// Returns all the routes back into the system
+	}
+	//------------------------------------------------------------------------------------------------------------------------
+	@Override
+	public void loadRouteData(Path arg0) throws DataLoadingException {//Loads the route data from the specified file, adding them to the currently loaded routes
+		
+		// TODO Auto-generated method stub	
+		
+		try {		
+			DocumentBuilder db = DocumentBuilderFactory.newInstance().newDocumentBuilder(); // pulls the documents from the XML document and then puts it db
+			Document doc = db.parse(arg0.toFile());// converts the path from arg0 to the variable doc
+			doc.getDocumentElement().normalize();//normalizes the document so it can be placed into nodes
+			
+			NodeList FN = doc.getElementsByTagName("FlightNumber");// creats the nodes first for all the data in the XML document
+			NodeList DOW = doc.getElementsByTagName("DayOfWeek"); // allows the nodes to have names
+			NodeList DT = doc.getElementsByTagName("DepartureTime");//calls each section a variable
+			NodeList DA = doc.getElementsByTagName("DepartureAirport");
+			NodeList DAC = doc.getElementsByTagName("DepartureAirportCode");
+			NodeList AT = doc.getElementsByTagName("ArrivalTime");
+			NodeList AA = doc.getElementsByTagName("ArrivalAirport");
+			NodeList AAC = doc.getElementsByTagName("ArrivalAirportCode");
+			NodeList D = doc.getElementsByTagName("Duration");
+				
+				for (int i = 0; i<FN.getLength(); i++) { // gets all the data from the XML document
+					Route settingRoutes = new Route(); // makes a new route under the variable settingRoutes
+					
+					settingRoutes.setFlightNumber(Integer.valueOf(FN.item(i).getTextContent()));// sets the strings to the correct data set 
+					settingRoutes.setDayOfWeek((DOW.item(i)).getTextContent());
+					settingRoutes.setDepartureTime(LocalTime.parse(DT.item(i).getTextContent())); // converts from a string to a time and then back again
+					settingRoutes.setDepartureAirport(DA.item(i).getTextContent());
+					settingRoutes.setDepartureAirportCode(DAC.item(i).getTextContent());
+					settingRoutes.setArrivalTime(LocalTime.parse(AT.item(i).getTextContent()));// converts from a string to a time and then back again
+					settingRoutes.setArrivalAirport(AA.item(i).getTextContent());
+					settingRoutes.setArrivalAirportCode(AAC.item(i).getTextContent());
+					settingRoutes.setDuration(Duration.parse(D.item(i).getTextContent())); // sets the duration because it is a mixture of letters and integers 
+					
+					routes.add(settingRoutes); // adds all the data which is converted into setting routes
+				}
+			
+		}
+		catch (ParserConfigurationException | SAXException | IOException | NumberFormatException e ) {		
+			throw new DataLoadingException(e); // all the exceptions needed to run
+		}
+	}
+	//------------------------------------------------------------------------------------------------------------------------
+	@Override
+	public void reset() {
+		routes.clear();
+		// TODO Auto-generated method stub
+	}
+}
+//------------------------------------------------------------------------------------------------------------------------
+//------------------------------------Schedular-------------------------------------------------------------
+package solution;
+import java.time.LocalDate;
+
+import baseclasses.IAircraftDAO;
+import baseclasses.ICrewDAO;
+import baseclasses.IPassengerNumbersDAO;
+import baseclasses.IRouteDAO;
+import baseclasses.IScheduler;
+import baseclasses.Schedule;
+import baseclasses.SchedulerRunner;
+
+public class Scheduler implements IScheduler {
+
+	@Override
+	public Schedule generateSchedule(IAircraftDAO arg0, ICrewDAO arg1, IRouteDAO arg2, IPassengerNumbersDAO arg3,
+			LocalDate arg4, LocalDate arg5) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void setSchedulerRunner(SchedulerRunner arg0) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void stop() {
+		// TODO Auto-generated method stub
+
+	}
+
+}
