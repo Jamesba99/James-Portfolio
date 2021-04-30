@@ -1,0 +1,98 @@
+""" A program that will show where the suspects have been using EXIF data"""
+import tkinter as tk
+import os
+import folium
+from folium.plugins import MarkerCluster
+from wand.image import Image
+import webbrowser
+
+#Making the Gui window
+Window = tk.Tk() #wcalls the tkinter as a 'win'
+Window.title("Tracking the suspects movements") #name of the window
+Window.geometry("400x200")#size of the window
+Window.resizable(0,0)#stops the window from resizing
+ #function to call the map
+SuspectMap = folium.Map(location=[52.4862, 1.8904],zoom_start=6.5)#sets where the map is
+marker_cluster=MarkerCluster().add_to(SuspectMap)
+    #allows the use of markers on the map
+
+#------------------gathers the EXIF data------------------------------------------------
+
+def getexif(filename):# function for the gathering EXIF data
+	# Get Exif data from file
+	exif = {} # array for gathering all EXIF data from Images folder
+	with Image(filename=filename) as image:
+   	 exif.update((k[5:], v) for k, v in image.metadata.items()
+      	                     if k.startswith('exif:'))
+	return (exif) #returns all the EXIF data
+
+#---------------------pasrsing the data------------------------------------------------------
+
+def convert(num, ref):
+	# Parse the longitude or latitude passed, and convert to decimal
+	num_split = num.split(",")
+	coord = []	
+	for num in num_split:
+		num = num.lstrip()
+		num_0 = num.split("/")
+		numX = float(num_0[0])/float(num_0[1]) # converts to a decimal(lat and long)
+		coord.append(numX)
+	
+	d = coord[0]
+	m = coord[1]
+	s = coord[2]
+	
+	result= d + (m / 60.0) + (s / 3600.0) #equation for long and lat	
+	if ref == 'W':
+			result = 0 - result
+	if ref == 'S':
+			result = 0 - result
+	return(result)
+    
+#---------------------------pulling long and lat---------------------------------------------------------------    
+#pulls all long and lat from the exif data
+def latlon(filename):
+	exif = getexif(filename) 
+	lat = exif['GPSLatitude']
+	lat_ref = exif['GPSLatitudeRef'].strip()
+	lon = exif['GPSLongitude']
+	lon_ref = exif['GPSLongitudeRef'].strip()
+	#converts the decimal back into a lat and long
+	lat = convert(lat, lat_ref)
+	lon = convert(lon, lon_ref)
+    #adds the folium markers to the map
+	folium.Marker([lat,lon], popup=filename,icon=folium.Icon(color='darkpurple')).add_to(SuspectMap)
+
+#-----------------------finding the image directory------------------------------------------------------------------
+
+#finds the images directory
+items = os.listdir("Images") #
+newlist = [] # makes an array for all the images
+for names in items:
+        if names.endswith(".jpg"):#finds all images with '.jpg'
+                newlist.append(names) #makes a new list called names
+for img in newlist:
+        try:
+                latlon("Images/"+img) #shows the lat and lon followed by the image number
+        except: # if there is an error then this will print
+                print ("No EXIF data found in:", "Images/"+img)
+
+#-----------------------GUI and plottin the map--------------------------------------------------------------------
+
+SuspectMap.save('Results.html')#saves and adds them to the map
+def openmap():#function to open new tab
+        webbrowser.open_new_tab('Results.html')#opens map from clicking button 
+
+name = tk.StringVar()#creating a string variable
+#a bit of text that shows the user what to do, also adds the button as unclickable 
+bt1 = tk.Button(Window, text="Please click Search to track the suspect ", bg = 'white', fg='black', state='disabled') # changing the input for the GUI
+bt1.place(x=90,y=15)#shows where the button is going to be placed                 
+#makes a button that allows openmap to be called, it also has code that changes the colour of the button
+Bt2 = tk.Button(Window, text="Search",  width =60,bg = 'Black', fg= 'white', command=openmap)#when something
+Bt2.place(x=0,y=90) #where you are putting it
+
+#--------------------------------------------------------------------------------------------------
+
+Window.mainloop() #starts the loop for the whole program
+
+#--------------------------------------------------------------------------------------------------
