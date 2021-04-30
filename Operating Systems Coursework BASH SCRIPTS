@@ -1,0 +1,186 @@
+#!/bin/bash
+# makes the system know its a shell script
+
+cat list.txt |  while read output # reads the list (has all the Ip address to ping) then puts the answers into output
+do #start of the while loop
+echo "searching connections" # allows the user to see that something is happening
+ping -c 1 "$output" > /dev/null #Pings the ip's in the list starting the from the first one
+        if [ $? -eq 0 ]; then # if the there is a connection will return 0 so if statment will start
+echo "-------------------------------------" >> output.txt # starts to output on output        
+date >> output.txt # date of test
+      uptime >> output.txt # shows connection uptime
+whoami >> output.txt # shows who is logged on
+echo "pinging $output now..." >> output.txt # pings the connection to see if it is active
+        echo "$output is Activity ON" >> output.txt # if output comes on this message will appear
+    echo "-------------------------------------"  >> output.txt
+else # if nothing else comes in
+echo "-------------------------------------"  >> output.txt        
+date >> output.txt # date of test
+        echo "pinging $output now...">> output.txt # outputs saying nothing
+        echo "$output is Activity OFF">> output.txt
+echo "-------------------------------------" >> output.txt          
+fi # finishes if statement
+done # finishes while loop
+
+
+Task 2-------------------------------------------------------------------------------------------------------------
+
+#!/bin/bash
+rm -r OS_details #removes directory
+mkdir OS_details # makes directory
+echo "                                   ">> OS_details/info.txt # to help format the text document
+echo "                                   ">> OS_details/info.txt
+echo "------------------------------------- Username-----------------------------" >> OS_details/info.txt #posts it to the txt file
+uname -n >> OS_details/info.txt # gets the username of the machine
+echo "---------------------------------------------------------------------------" >> OS_details/info.txt
+echo "                                   ">> OS_details/info.txt
+echo "                                   ">> OS_details/info.txt
+echo "----------------------------------- Kernal Information --------------------" >> OS_details/info.txt
+uname -a >> OS_details/info.txt # gets all the kernel information
+echo "---------------------------------------------------------------------------" >> OS_details/info.txt
+echo "                                   ">> OS_details/info.txt
+echo "                                   ">> OS_details/info.txt
+echo "----------------------------------- CPU Family ---------------------------" >> OS_details/info.txt
+cat /proc/cpuinfo | grep 'family' | sed -n "1p" >> OS_details/info.txt # gets cpu information but only information abou the famiy
+cat /proc/cpuinfo | grep 'cpu MHz' | sed -n "1p" >> OS_details/info.txt #gets cpu information but only information abou the Mhz
+cat /proc/cpuinfo | grep 'cores' | sed -n "1p" >> OS_details/info.txt #gets cpu information but only information abou the cores
+echo "--------------------------------------------------------------------------" >> OS_details/info.txt
+echo "------------------------------------ RAM informtation -----------" >> OS_details/info.txt
+free >> OS_details/info.txt # gets all the informtion about the RAM including free and used space
+echo "--------------------------------------------------------------------------" >> OS_details/info.txt
+echo "                                   ">> OS_details/info.txt
+echo "                                   ">> OS_details/info.txt
+echo "----------- HardSpace info -----------" >> OS_details/info.txt
+
+df -BM  >> OS_details/info.txt # gets information about the Hardrive and everything mounted on it
+
+echo "------------------------------------" >> OS_details/info.txt
+
+Task 3----------------------------------------------------------------------------------------------------------
+
+#!/bin/bash
+rm -r node_details #Removes the directory before begining the script
+mkdir node_details #Makes a new directory called node_details
+echo "Loading Please Wait" #
+for the command line to show the user that something is happening
+echo "___________________________________________________________" >> node_details/Node1.txt #allows the command to be printed in the txt file
+echo "-----------------------------------------------------------" >> node_details/Node1.txt
+echo "              Test machine 1 ">> node_details/Node1.txt # using this to make it easier to see what test number it is
+echo "-----------------------------------------------------------" >> node_details/Node1.txt
+ping -c 1 "149.170.10.20" > /dev/null #Pings the ip once 
+if [ $? -eq 0 ]; then # if it comes in as active it runs the code below
+echo "___________________________________________________________" >> node_details/Node1.txt
+echo "--------------Computer Name--------------------------------" >> node_details/Node1.txt #makes it easier for the users to read
+ssh 149.170.10.20 'uname -a ' >> node_details/Node1.txt #uses ssh to get the name of another computer
+echo "___________________________________________________________" >> node_details/Node1.txt
+echo "-------------Activity--------------------------------------" >> node_details/Node1.txt
+echo "             pinging 149.170.10.20 now                     " >> node_details/Node1.txt
+echo "             149.170.10.20 is Active ON                    " >> node_details/Node1.txt #shows whether the connection will be active or not
+echo "___________________________________________________________" >> node_details/Node1.txt
+echo "--------------Kernel information---------------------------" >> node_details/Node1.txt
+ssh 149.170.10.20 'uname -n ' >> node_details/Node1.txt#uses ssh to get the kernel information of another computer
+echo "___________________________________________________________" >> node_details/Node1.txt
+echo "--------------CPU Information------------------------------" >> node_details/Node1.txt #using echo to make it easier for the user to read the information 
+ssh 149.170.10.20 'cat /proc/cpuinfo | grep 'family' | sed -n "1p"'>> node_details/Node1.txt #uses SSH to get all the information of the other computer in this case CPU info
+ssh 149.170.10.20 'cat /proc/cpuinfo | grep 'cpu MHz' | sed -n "1p"' >> node_details/Node1.txt #also uses grep to filter and only find the relevent information
+ssh 149.170.10.20 'cat /proc/cpuinfo | grep 'cores' | sed -n "1p" '>> node_details/Node1.txt
+echo "___________________________________________________________" >> node_details/Node1.txt
+echo "--------------RAM Information------------------------------" >> node_details/Node1.txt
+ssh 149.170.10.20 'free >> node_details/Node1.txt' #uses ssh to find the other machines RAM informatio
+  echo "___________________________________________________________" >> node_details/Node1.txt
+echo "--------------HardDrive Information------------------------" >> node_details/Node1.txt
+ssh 149.170.10.20 'df -BM  >> node_details/Node1.txt' #gets all the hardrive information
+else #if no connection is found then this part of the script will run
+echo "-----------------------------------------------------------" >> node_details/Node1.txt
+echo "              Test machine 1 ">> node_details/Node1.txt
+echo "-----------------------------------------------------------" >> node_details/Node1.txt
+echo "___________________________________________________________" >> node_details/Node1.txt
+echo "              pinging 149.170.10.20 now                    ">> node_details/Node1.txt
+echo "              149.170.10.20 is Active OFF                  ">> node_details/Node1.txt # this will pop up in the text area saying that there is no active connection 
+echo "-----------------------------------------------------------" >> node_details/Node1.txt      
+echo "___________________________________________________________" >> node_details/Node1.txt
+fi
+echo "Test Complete Next Test Will Begin"  
+#------------------------------------------------------------------------------------------------------------
+echo "Loading Please Wait"
+echo "-----------------------------------------------------------" >> node_details/Node2.txt
+echo "             Test machine 2">> node_details/Node2.txt
+echo "-----------------------------------------------------------" >> node_details/Node2.txt
+ping -c 1 "149.170.10.19" > /dev/null #Pings the ip once 
+if [ $? -eq 0 ]; then# if it comes in as active it runs the code below
+echo "             pinging 149.170.10.19 now...                  " >> node_details/Node2.txt
+        echo "             149.170.10.19 is Active ON                    " >> node_details/Node2.txt
+echo "___________________________________________________________" >> node_details/Node2.txt
+echo "-------------Computer Name---------------------------------" >> node_details/Node2.txt
+ssh 149.170.10.20 'uname -a ' >> node_details/Node2.txt #uses ssh to find the other computers information
+echo "___________________________________________________________" >> node_details/Node2.txt
+echo "-------------Activity--------------------------------------" >> node_details/Node2.txt
+echo "pinging 149.170.10.19 now..." >> node_details/Node2.txt
+        echo "149.170.10.19 is Active ON" >> node_details/Node2.txt #shows whether the connection will be active or not
+echo "___________________________________________________________" >> node_details/Node2.txt
+echo "--------------Kernel information---------------------------" >> node_details/Node2.txt
+ssh 149.170.10.19 'uname -n ' >> node_details/Node2.txt # uses ssh to see another computers kernal information
+echo "___________________________________________________________" >> node_details/Node2.txt
+echo "--------------CPU Information------------------------------" >> node_details/Node2.txt
+ssh 149.170.10.19 'cat /proc/cpuinfo | grep 'model' | sed -n "1p"' >> node_details/Node2.txt # uses ssh to see the cpu inforamtion of another computer
+ssh 149.170.10.19 'cat /proc/cpuinfo | grep 'family' | sed -n "1p"'>> node_details/Node2.txt# uses grep to search for specific information about the CPU 
+ssh 149.170.10.19 'cat /proc/cpuinfo | grep 'MHz' | sed -n "1p"'   >> node_details/Node2.txt
+ssh 149.170.10.19 'cat /proc/cpuinfo | grep 'cores' | sed -n "1p" '>> node_details/Node2.txt
+echo "___________________________________________________________" >> node_details/Node2.txt
+echo "--------------RAM Information------------------------------" >> node_details/Node2.txt
+ssh 149.170.10.19 'free' >> node_details/Node2.txt #uses ssh to see the other machines information about the RAM
+  echo "___________________________________________________________" >> node_details/Node2.txt
+echo "--------------HardDrive Information------------------------" >> node_details/Node2.txt
+ssh 149.170.10.19 'df -BM ' >> node_details/Node2.txt #uses ssh to see the other machines information about the hardrive
+else #if no connection is found this will be written in the script
+echo "-----------------------------------------------------------" >> node_details/Node2.txt
+echo "              Test machine 2 ">> node_details/Node2.txt
+echo "-----------------------------------------------------------" >> node_details/Node2.txt
+echo "___________________________________________________________" >> node_details/Node2.txt
+echo "              pinging 149.170.10.19 now...                 " >> node_details/Node2.txt
+echo "              149.170.10.19 is Active OFF                  " >> node_details/Node2.txt# shows that the connection is offline
+echo "-----------------------------------------------------------" >> node_details/Node2.txt      
+echo "___________________________________________________________" >> node_details/Node2.txt
+fi
+echo "Test Complete Next Test Will Begin"
+#------------------------------------------------------------------------------------------------------------
+ping -c 1 "149.170.10.22" > /dev/null #Pings the ip once 
+if [ $? -eq 0 ]; then if it comes in as active it runs the code below
+echo "pinging 149.170.10.22 now..." >> node_details/Node3.txt # shows in the txt file that something is happening
+        echo "149.170.10.22 is Active ON" >> node_details/Node3.txt
+echo "-----------------------------------------------------------" >> node_details/Node3.txt
+echo "               Testing machine 3 ">> node_details/Node3.txt
+echo "-----------------------------------------------------------" >> node_details/Node3.txt
+echo "___________________________________________________________" >> node_details/Node3.txt
+echo "-------------Computer Name---------------------------------" >> node_details/Node3.txt
+ssh 149.170.10.22 'uname -a ' >> node_details/Node3.txt #uses ssh to find the computers name
+echo "___________________________________________________________" >> node_details/Node3.txt
+echo "-------------Activity--------------------------------------" >> node_details/Node3.txt
+echo "              pinging 149.170.10.22 now                    " >> node_details/Node3.txt
+        echo "              149.170.10.22 is Active ON                   " >> node_details/Node3.txt #shows that the connection is active 
+echo "___________________________________________________________" >> node_details/Node3.txt
+echo "--------------Kernel information---------------------------" >> node_details/Node3.txt
+ssh 149.170.10.22 'uname -n ' >> node_details/Node3.txt #uses ssh to show the kernel information of the other computer
+echo "___________________________________________________________" >> node_details/Node3.txt
+echo "--------------CPU Information------------------------------" >> node_details/Node3.txt
+ssh 149.170.10.22 'cat /proc/cpuinfo | grep 'family' | sed -n "1p"'>> node_details/Node3.txt# uses ssh to see the cpu inforamtion of another computer
+ssh 149.170.10.22 'cat /proc/cpuinfo | grep 'cpu MHz' | sed -n "1p" '>> node_details/Node3.txt# uses grep to search for specific information about the CPU 
+ssh 149.170.10.22 'cat /proc/cpuinfo | grep 'cores' | sed -n "1p" '>> node_details/Node3.txt
+echo "___________________________________________________________" >> node_details/Node3.txt
+echo "--------------RAM Information------------------------------" >> node_details/Node3.txt
+ssh 149.170.10.22 'free' >> node_details/Node3.txt #uses ssh to find the other computers RAM information
+  echo "___________________________________________________________" >> node_details/Node3.txt
+echo "--------------HardDrive Information------------------------" >> node_details/Node3.txt
+ssh 149.170.10.22 'df -BM'  >> node_details/Node3.txt # uses ssh to find the other computers hard disk inforamtion 
+else #if no connection is found this will be written in the script
+echo "-----------------------------------------------------------" >> node_details/Node3.txt
+echo "              Test machine 3 ">> node_details/Node3.txt
+echo "-----------------------------------------------------------" >> node_details/Node3.txt
+echo "___________________________________________________________" >> node_details/Node3.txt
+echo "              pinging 149.170.10.22 now...                 ">> node_details/Node3.txt
+echo "              149.170.10.22 is Active OFF                  ">> node_details/Node3.txt#will show this information if no connection is found 
+echo "-----------------------------------------------------------" >> node_details/Node3.txt      
+echo "___________________________________________________________" >> node_details/Node3.txt
+fi
+echo "Testing complete Results will follow" # once completed it will show this to show the user it is finised
+#------------------------------------------------------------------------------------------------------------
