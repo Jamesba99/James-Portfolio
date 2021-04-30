@@ -1,0 +1,220 @@
+package com.example.railwaydistance;
+
+//Author James Brito Alvarado
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import android.Manifest;
+import android.content.Context;
+import android.content.pm.PackageManager;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.os.AsyncTask;
+import android.os.Bundle;
+import android.os.StrictMode;
+import android.text.method.ScrollingMovementMethod;
+import android.view.View;
+import android.widget.TableLayout;
+import android.widget.TableRow;
+import android.widget.TextView;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.w3c.dom.Text;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.lang.reflect.Array;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.Socket;
+import java.net.URL;
+import java.net.URLConnection;
+import java.util.ArrayList;
+
+import static android.icu.lang.UCharacter.GraphemeClusterBreak.V;
+
+
+//class the main methods uses
+public class MainActivity extends AppCompatActivity {
+    @Override
+    // on create - used to call the activity main
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        //to be able to thread in the background using the thread class
+        String myURl = "http://10.0.2.2:8080/stations?lat=53.472&lng=2.244";
+        String Result;
+        //get request for the thread class
+//        HttpGetRequest getRequest = new HttpGetRequest();
+//        result = getRequest.execute(myURl).get();
+        //allows access to the interenet and locations
+        String[] requiredPermissions = {
+                //requests permissions for the internet and location
+                Manifest.permission.INTERNET,
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+        };//end of string loop
+
+        //
+        // if there is connection to these this code runs and if it comes back as negative it will automatically grant it
+        boolean ok = true;
+        for (int i = 0; i < requiredPermissions.length; i++) {
+            //sees if the connection to the GPS can be made
+            int result = ActivityCompat.checkSelfPermission(this, requiredPermissions[i]);
+            if (result != PackageManager.PERMISSION_GRANTED) {
+                ok = false;
+            }//end of if statement
+        }//end of for loop
+        //only runs if connection is active and has a value of 1 if not value stays at 0
+        if (!ok) {
+            ActivityCompat.requestPermissions(this, requiredPermissions, 1);
+            System.exit(0);
+        }//end of if statement
+        else {
+
+//            LocationManager lm = (LocationManager) getSystemService(LOCATION_SERVICE);
+//            lm.requestLocationUpdates(LocationManager.GPS_PROVIDER,0,0, new LocationListener){
+//                @Override
+//                //gets the locations and oversides
+//                public void onLocationChanged(Location location){
+//                    lat = Location.getLatitude();
+//                    lng = Location.getLongitude();
+//                    ((TextView)findViewById(R.id.latTextView)).setText(""+ lat);
+//                    ((TextView)findViewById(R.id.lngTextView)).setText(""+ lng);
+//                }
+//                @Override
+//                    public void onStatusChanged(String s), int i, Bundle bundle){ }
+//                @Override
+//                    public void onProviderEnabled(String s) { }
+//                @Override
+//                    public  void onProviderDisabled(String s){ }
+//            };
+//        } // end of else
+
+
+        } //end of on create
+        //able to connect to a server
+        public void connectivty (View V){
+            //allows strict mode to stop the emulator
+            StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+            StrictMode.setThreadPolicy(policy);
+
+            //checks connectivity of the server
+            ConnectivityManager pleaseConnect = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+            NetworkInfo networkInfo = pleaseConnect.getActiveNetworkInfo();
+            //creates a new array called Listitems
+            ArrayList<String> listItems = new ArrayList<String>();
+            //if connection does not come back as null try statement will be used
+            if (networkInfo != null && networkInfo.isConnected()) {
+                //tries to open a connection to the server
+                try {
+                    URL url = new URL("http://10.0.2.2:8080/stations?lat=53.472&lng=2.244");
+                    URLConnection connection = url.openConnection();
+                    InputStreamReader ins = new InputStreamReader(connection.getInputStream());
+                    BufferedReader in = new BufferedReader(ins);
+                    String line = "";
+                    //once the server establishes a connection and parses it threw a JSON ARRAY
+                    //Creates a table that the JSON array values will go into
+                    while ((line = in.readLine()) != null) {
+                        JSONArray TableData = new JSONArray(line);
+                        TableLayout Layout = (TableLayout) findViewById(R.id.Table1);
+                        Layout.setStretchAllColumns(true);
+                        Layout.bringToFront();
+                        //creats a for loop for every time data goes threw it until there is no more
+                        for (int i = 0; i < TableData.length(); i++) {
+                            JSONObject Object = (JSONObject) TableData.get(i);
+                            TableRow tablerow = new TableRow(this);
+                            TextView textEntry1 = new TextView(this);
+                            textEntry1.append(Object.getString("StationName"));
+                            TextView textEntry2 = new TextView(this);
+                            textEntry2.append(Object.getString("Latitude"));
+                            TextView textEntry3 = new TextView(this);
+                            textEntry3.append(Object.getString("Longitude"));
+                            // adds new row to the table so it more data can be added
+                            tablerow.addView(textEntry1);
+                            tablerow.addView(textEntry2);
+                            tablerow.addView(textEntry3);
+                            Layout.addView(tablerow);
+                        }
+
+                    }
+                    //throws exceptions for the code above
+                } catch (MalformedURLException e) {
+                    e.printStackTrace();
+                } catch (IOException i) {
+                    i.printStackTrace();
+                } catch (JSONException j) {
+                    j.printStackTrace();
+                }
+            }
+        }
+    }
+}
+//----------------------------------------------thread class (new class needs to be made)----------------------
+package com.example.railwaydistance;
+
+import android.os.AsyncTask;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+//requests connection time out and timeout and sets them to 15000
+public class Thread extends AsyncTask<String, Void, String> {
+   public static final String REQUEST_METHOD = "GET";
+   public static final int READ_TIMEOUT = 15000;
+   public static final int CONNECTION_TIMEOUT = 15000;
+
+    @Override
+    protected  String doInBackground(String... params){
+        String stringUrl = params[0];
+        String r;
+        String IL;
+
+        try {
+            URL myURl = new URL(stringUrl);
+            HttpURLConnection connection = (HttpURLConnection) myURl.openConnection();
+            //set method and timings
+            connection.setRequestMethod(REQUEST_METHOD);
+            connection.setReadTimeout(READ_TIMEOUT);
+            connection.setConnectTimeout(CONNECTION_TIMEOUT);
+            connection.connect();
+            //create a new input stream reader
+            InputStreamReader streamReader = new InputStreamReader(connection.getInputStream());
+            // create a new buffered reader and string
+            BufferedReader reader = new BufferedReader(streamReader);
+            StringBuilder stringBuilder = new StringBuilder();
+
+            //check if the line that is being read is not null
+            while ((IL = reader.readLine()) != null) {
+                stringBuilder.append(IL);
+            }
+            //close the reader
+            reader.close();
+            streamReader.close();
+
+            //set the result equal to the variable
+            r = stringBuilder.toString();
+        }
+        //exceptions for IO
+        catch(IOException e){
+            e.printStackTrace();
+            r = null;
+        }//end of try
+
+        return r;
+
+    }
+    @Override // shows the results
+    protected void onPostExecute(String result){
+        super.onPostExecute(result);
+    }
+
+
+}
